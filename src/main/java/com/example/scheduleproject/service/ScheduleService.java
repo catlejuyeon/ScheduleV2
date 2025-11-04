@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,12 +28,12 @@ public class ScheduleService {
         Schedule savedSchedule = scheduleRepository.save(schedule);
 
         return new CreateScheduleResponse(
-                savedSchedule.getSchedule_id(),
+                savedSchedule.getScheduleId(),
                 savedSchedule.getTitle(),
                 savedSchedule.getContent(),
                 savedSchedule.getName(),
                 savedSchedule.getPassword(),
-                savedSchedule.getCreated_date()
+                savedSchedule.getCreatedDate()
         );
     }
 
@@ -42,19 +43,34 @@ public class ScheduleService {
                 ()->new IllegalStateException("없는 스케줄입니다.")
         );
         return new GetScheduleResponse(
-                schedule.getSchedule_id(),
+                schedule.getScheduleId(),
                 schedule.getContent(),
                 schedule.getName(),
                 schedule.getTitle(),
-                schedule.getCreated_date(),
-                schedule.getUpdated_date()
+                schedule.getCreatedDate(),
+                schedule.getUpdatedDate()
         );
     }
 
-//    @Transactional(readOnly = true)
-//    public List<GetScheduleResponse> findAll(String name) {
-//        List<Schedule> schedules;
-//
-//        if(name!=null&&!name.isBlank()){}
-//    }
+    public List<GetScheduleResponse> findAll(String name) {
+        List<Schedule> schedules;
+
+        // 파라미터가 null이거나 비어있으면 전체 조회
+        if (name == null || name.isEmpty()) {
+            schedules = scheduleRepository.findAllByOrderByUpdatedDateDesc();
+        } else {
+            schedules = scheduleRepository.findAllByNameOrderByUpdatedDateDesc(name.trim());
+        }
+
+        return schedules.stream()
+                .map(schedule -> new GetScheduleResponse(
+                        schedule.getScheduleId(),
+                        schedule.getContent(),
+                        schedule.getName(),
+                        schedule.getTitle(),
+                        schedule.getCreatedDate(),
+                        schedule.getUpdatedDate()
+                ))
+                .toList();
+    }
 }
