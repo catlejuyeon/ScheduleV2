@@ -95,4 +95,20 @@ public class ScheduleService {
                 schedule.getUpdatedDate()
         );
     }
+
+    @Transactional
+    public void delete(Long scheduleId,String password) {
+        boolean existence = scheduleRepository.existsById(scheduleId);
+        //1. 일정 존재하는지 조회
+        Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(
+                        ()->new IllegalStateException("없는 일정입니다."));
+
+        //2. 비밀번호 검증
+        if (!schedule.getPassword().equals(password)) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        //3. 삭제
+        scheduleRepository.deleteById(scheduleId);
+    }
 }
