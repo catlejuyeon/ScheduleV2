@@ -1,8 +1,6 @@
 package com.example.scheduleproject.service;
 
-import com.example.scheduleproject.dto.CreateScheduleRequest;
-import com.example.scheduleproject.dto.CreateScheduleResponse;
-import com.example.scheduleproject.dto.GetScheduleResponse;
+import com.example.scheduleproject.dto.*;
 import com.example.scheduleproject.entity.Schedule;
 import com.example.scheduleproject.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +50,7 @@ public class ScheduleService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<GetScheduleResponse> findAll(String name) {
         List<Schedule> schedules;
 
@@ -72,5 +71,28 @@ public class ScheduleService {
                         schedule.getUpdatedDate()
                 ))
                 .toList();
+    }
+
+    @Transactional
+    public UpdateScheduleResponse update(Long scheduleId, UpdateScheduleRequest request) {
+        Schedule schedule=scheduleRepository.findById(scheduleId).orElseThrow(
+                ()->new IllegalStateException("없는 스케줄입니다.")
+        );
+
+        // 비밀번호 검증
+        if (!schedule.getPassword().equals(request.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        schedule.updateSchedule(
+                request.getTitle(),
+                request.getName());
+
+        return new UpdateScheduleResponse(
+                schedule.getScheduleId(),
+                schedule.getTitle(),
+                schedule.getName().trim(),
+                schedule.getUpdatedDate()
+        );
     }
 }
