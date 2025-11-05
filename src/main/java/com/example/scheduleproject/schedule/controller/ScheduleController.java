@@ -1,5 +1,6 @@
 package com.example.scheduleproject.schedule.controller;
 
+import com.example.scheduleproject.schedule.dto.res.GetScheduleDetailResponse;
 import com.example.scheduleproject.schedule.service.ScheduleService;
 import com.example.scheduleproject.schedule.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,8 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedules/{scheduleId}")
-    public ResponseEntity<GetScheduleResponse>getOneSchedule(@PathVariable Long scheduleId) {
+    public ResponseEntity<GetScheduleDetailResponse
+            >getOneSchedule(@PathVariable Long scheduleId) {
         return ResponseEntity.status(HttpStatus.OK).body(scheduleService.findOne(scheduleId));
     }
 
@@ -44,5 +46,4 @@ public class ScheduleController {
         scheduleService.delete(scheduleId, request.getPassword());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
 }

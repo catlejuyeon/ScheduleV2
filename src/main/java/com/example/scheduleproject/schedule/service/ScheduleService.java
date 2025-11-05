@@ -1,6 +1,8 @@
 package com.example.scheduleproject.schedule.service;
 
+import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
 import com.example.scheduleproject.schedule.dto.*;
+import com.example.scheduleproject.schedule.dto.res.GetScheduleDetailResponse;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,17 +37,27 @@ public class ScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public GetScheduleResponse findOne(Long scheduleId) {
+    public GetScheduleDetailResponse findOne(Long scheduleId) {
         Schedule schedule=scheduleRepository.findById(scheduleId).orElseThrow(
                 ()->new IllegalStateException("없는 스케줄입니다.")
         );
-        return new GetScheduleResponse(
+        List<GetCommentResponse> commentResponses = schedule.getComments().stream()
+                .map(comment -> new GetCommentResponse(
+                        comment.getCommentId(),
+                        comment.getContent(),
+                        comment.getCommentAuthor(),
+                        comment.getCreatedDate(),
+                        comment.getUpdatedDate()
+                ))
+                .toList();
+        return new GetScheduleDetailResponse(
                 schedule.getScheduleId(),
                 schedule.getContent(),
                 schedule.getName(),
                 schedule.getTitle(),
                 schedule.getCreatedDate(),
-                schedule.getUpdatedDate()
+                schedule.getUpdatedDate(),
+                commentResponses
         );
     }
 
