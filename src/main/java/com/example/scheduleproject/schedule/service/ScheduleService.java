@@ -2,7 +2,10 @@ package com.example.scheduleproject.schedule.service;
 
 import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
 import com.example.scheduleproject.schedule.dto.*;
+import com.example.scheduleproject.schedule.dto.res.CreateScheduleResponse;
 import com.example.scheduleproject.schedule.dto.res.GetScheduleDetailResponse;
+import com.example.scheduleproject.schedule.dto.res.GetScheduleResponse;
+import com.example.scheduleproject.schedule.dto.res.UpdateScheduleResponse;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;

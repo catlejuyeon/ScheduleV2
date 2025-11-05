@@ -1,6 +1,5 @@
-package com.example.scheduleproject.schedule.dto;
+package com.example.scheduleproject.schedule.dto.res;
 
-import jakarta.persistence.GeneratedValue;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
