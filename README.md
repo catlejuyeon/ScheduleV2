@@ -41,7 +41,17 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     "name":"동이",
     "password":"asd1243"
 }
+```
+#### Request Fields
 
+| 필드명     | 타입    | 필수 여부   | 설명     | 제약 조건           | 비고                       |
+|----------|--------|-----------|---------|-------------------|---------------------------|
+| title    | String | Required  | 일정 제목 | 최대 30자, 공백 불가  | @NotBlank, @Size(max=30)  |
+| content  | String | Required  | 일정 내용 | 최대 200자, 공백 불가 | @NotBlank, @Size(max=200) |
+| name     | String | Required  | 작성자명  | 공백 불가            | @NotBlank                |
+| password | String | Required  | 비밀번호  | 공백 불가            | @NotBlank, 응답에는 미포함   |
+
+```
 // Response
 {
     "title": "놀이동산 가는날",
@@ -52,7 +62,16 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     "contents": "누나랑 엄마랑 같이 노는 날"
 }
 ```
-#### 댓글 생성 (GET /schedules/{scheduleId}/comments)
+#### Response Fields
+| 파라미터명     | 타입    |    설명        |
+|-------------|--------|---------------|
+| scheduleId  | Long   | 삭제할 일정의 ID |
+| title       | String | 일정 제목       |
+| content     | String | 일정 내용       |
+| name        | String | 작성자명        |
+| createdDate | String | 생성 일시       |
+| updatedDate | String | 수정 일시       |
+### 댓글 생성 (GET /schedules/{scheduleId}/comments)
 ```
 // Request
 {
@@ -60,6 +79,15 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     "commentAuthor" : "누나",
     "password":"asd1243"
 }
+```
+#### Request Fields
+| 필드명          | 타입    | 설명     |
+|---------------|--------|---------|
+| content       | String | 댓글 내용 |
+| commentAuthor | String | 작성자명  |
+| password      | String | 비밀번호  |
+
+```
 // Response
 {
     "commentId": 2,
@@ -68,6 +96,13 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     "created_date": "2025-11-06T12:05:08.151606"
 }
 ```
+#### Response Fields
+| 필드명        | 타입   | 설명      |
+|---------------|--------|-----------|
+| content       | String | 댓글 내용 |
+| commentAuthor | String | 작성자명  |
+| password      | String | 비밀번호  |
+| commentId     | Long   | 댓글ID    |
 <img width="542" height="195" alt="image" src="https://github.com/user-attachments/assets/ac181d3e-47ec-48f9-8bfa-fd9446f2798f" />
 
 일정당 댓글은 10개 이하로 11개부터 댓글 작성시 전역예외처리 메세지 출력
@@ -106,6 +141,24 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     ]
 }
 ```
+#### Response
+| 필드명      | 타입           | 설명                    |
+|-------------|----------------|-------------------------|
+| scheduleId  | Long           | 일정 고유 ID            |
+| title       | String         | 일정 제목               |
+| content     | String         | 일정 내용               |
+| name        | String         | 일정 작성자 이름        |
+| createdDate | String         | 일정 생성 일시          |
+| updatedDate | String         | 일정 수정 일시          |
+| comments    | Array<Comment> | 일정에 달린 댓글 리스트 |
+#### Comment 객체 구조
+| 필드명        | 타입   | 설명           |
+|---------------|--------|----------------|
+| commentId     | Long   | 댓글 고유 ID   |
+| content       | String | 댓글 내용      |
+| commentAuthor | String | 댓글 작성자    |
+| createdDate   | String | 댓글 생성 일시 |
+|  updatedDate  | String | 댓글 수정 일시 |
 ### 일정 수정 (PATCH /schedules/{scheduleId})
 ```
 // Request
@@ -114,6 +167,14 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     "name" : "세상에서 제일 불쌍한 고양이",
     "password":"asd1243"
 }
+```
+#### Request Fields
+| 필드명     | 타입    | 필수 여부   | 설명          | 제약 조건          | 비고                      |
+|----------|--------|-----------|--------------|------------------|--------------------------|
+| title    | String | Required  | 수정할 일정 제목 | 최대 30자, 공백 불가 | @NotBlank, @Size(max=30) |
+| name     | String | Required  | 수정할 작성자명  | 공백 불가           | @NotBlank               |
+| password | String | Required  | 비밀번호 확인   | 공백 불가           | 생성 시 입력한 비밀번호       |
+```
 // Response
 {
     "scheduleId": 1,
@@ -122,6 +183,13 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
     "updatedDate": "2025-11-06T12:00:35.540722"
 }
 ```
+#### Response Fields
+|   필드명      | 타입    | 설명                           |
+|-------------|--------|--------------------------------|
+| scheduleId  | Long   | 일정 고유 ID                   |
+| title       | String | 수정된 제목                    |
+| name        | String | 수정된 작성자명                |
+| updatedDate | String | 수정 완료 시각 (자동 업데이트) |
 <img width="528" height="186" alt="image" src="https://github.com/user-attachments/assets/770e085b-ecc9-48ed-8eb0-08bdffe49982" />
 
 처음 일정 생성 됐을 때 비밀번호와 수정할 때 입력한 비밀번호가 맞지 않을 때 전역예외처리 메세지 출력
@@ -134,6 +202,10 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
 ```
 <img width="552" height="122" alt="image" src="https://github.com/user-attachments/assets/fa8a4b08-ccd1-4e52-a65c-6f6dad6d031d" />
 
+#### Request Fields
+| 파라미터명 | 타입 | 필수 여부 | 설명             |
+|------------|------|-----------|------------------|
+| scheduleId | Long | Required  | 삭제할 일정의 ID |
 ## 📊 ERD
 <img width="746" height="180" alt="image" src="https://github.com/user-attachments/assets/9a3113f4-3ace-471a-84c6-9ae38a56d6cd" />
 
