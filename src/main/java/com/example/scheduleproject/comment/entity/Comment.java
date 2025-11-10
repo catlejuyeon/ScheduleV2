@@ -29,21 +29,10 @@ public class Comment extends BaseEntity {
     @JoinColumn(name="schedule_id",nullable = false)
     private Schedule schedule;
 
-    public Comment(String commentAuthor, String content, String password) {
-        this.commentAuthor = commentAuthor;
-        this.content = content;
-        this.password = password;
-    }
-
     public Comment(String commentAuthor, String content, String password, Schedule schedule) {
         this.commentAuthor = commentAuthor;
         this.content = content;
         this.password = password;
         this.schedule = schedule;
     }
-
-//    public void updateComment(String content, String name){
-//        this.title=title;
-//        this.name=name;
-//    }
 }
