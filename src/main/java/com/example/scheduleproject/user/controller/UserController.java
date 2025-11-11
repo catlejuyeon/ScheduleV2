@@ -11,10 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,8 +40,13 @@ public class UserController {
         session.setAttribute("userId", response.getUserId());
         session.setAttribute("email", response.getEmail());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    //유저 전체 조회
+    @GetMapping
+    public ResponseEntity<List<GetUserResponse>> getAllUser(){
+        return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
+    }
 
 }

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -56,5 +58,20 @@ public class UserService {
             user.getUsername(),
             user.getEmail()
         );
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+    public List<GetUserResponse> findAll() {
+        List<User> users= (List<User>) userRepository.findAll();
+
+        return users.stream()
+                .map(user-> new GetUserResponse(
+                        user.getUserid(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getCreatedDate(),
+                        user.getUpdatedDate()
+                ))
+                .toList();
     }
 }
