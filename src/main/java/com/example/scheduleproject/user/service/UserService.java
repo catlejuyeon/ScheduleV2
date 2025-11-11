@@ -36,7 +36,7 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return new GetUserResponse(
-                savedUser.getUserid(),
+                savedUser.getUserId(),
                 savedUser.getUsername(),
                 savedUser.getEmail(),
                 savedUser.getCreatedDate(),
@@ -54,7 +54,7 @@ public class UserService {
         }
 
         return new LoginResponse(
-            user.getUserid(),
+            user.getUserId(),
             user.getUsername(),
             user.getEmail()
         );
@@ -66,12 +66,26 @@ public class UserService {
 
         return users.stream()
                 .map(user-> new GetUserResponse(
-                        user.getUserid(),
+                        user.getUserId(),
                         user.getUsername(),
                         user.getEmail(),
                         user.getCreatedDate(),
                         user.getUpdatedDate()
                 ))
                 .toList();
+    }
+
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+    public GetUserResponse findById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        return new GetUserResponse(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getCreatedDate(),
+                user.getUpdatedDate()
+        );
     }
 }

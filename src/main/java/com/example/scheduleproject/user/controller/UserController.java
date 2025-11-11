@@ -49,4 +49,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
     }
 
+    //유저 단건 조회
+    @GetMapping("/{userId}")
+    public ResponseEntity<GetUserResponse> getOneUser(@PathVariable Long userId){
+        return ResponseEntity.status(HttpStatus.OK).body(userService.findById(userId));
+    }
+
 }
