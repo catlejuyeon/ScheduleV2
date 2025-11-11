@@ -1,6 +1,7 @@
 package com.example.scheduleproject.user.controller;
 
 import com.example.scheduleproject.user.dto.req.CreateUserRequest;
+import com.example.scheduleproject.user.dto.req.DeleteUserRequest;
 import com.example.scheduleproject.user.dto.req.LoginRequest;
 import com.example.scheduleproject.user.dto.res.GetUserResponse;
 import com.example.scheduleproject.user.dto.res.LoginResponse;
@@ -53,6 +54,15 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<GetUserResponse> getOneUser(@PathVariable Long userId){
         return ResponseEntity.status(HttpStatus.OK).body(userService.findById(userId));
+    }
+
+    //유저 삭제
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable Long userId,
+            @RequestParam String password) {
+        userService.delete(userId,password);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 }

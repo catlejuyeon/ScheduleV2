@@ -88,4 +88,15 @@ public class UserService {
                 user.getUpdatedDate()
         );
     }
+
+    @Transactional
+    public void delete(Long userId, String password) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        if(!user.getPassword().equals(password)){
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+        userRepository.delete(user);
+    }
 }
