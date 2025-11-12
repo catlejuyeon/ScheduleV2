@@ -16,7 +16,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
     Optional<Schedule> findByIdWithComments(@Param("scheduleId") Long scheduleId);
 
     // 작성자명으로 조회 + 수정일 내림차순
-    List<Schedule> findAllByNameOrderByUpdatedDateDesc(String name);
+    List<Schedule> findAllByUser_UsernameOrderByUpdatedDateDesc(String username);
 
     // 전체 조회 + 수정일 내림차순
     List<Schedule> findAllByOrderByUpdatedDateDesc();

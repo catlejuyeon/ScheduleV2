@@ -9,6 +9,8 @@ import com.example.scheduleproject.schedule.dto.res.GetScheduleResponse;
 import com.example.scheduleproject.schedule.dto.res.UpdateScheduleResponse;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.schedule.repository.ScheduleRepository;
+import com.example.scheduleproject.user.entity.User;
+import com.example.scheduleproject.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +21,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public CreateScheduleResponse save(CreateScheduleRequest request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
         Schedule schedule = new Schedule(
                 request.getTitle(),
                 request.getContent(),
-                request.getName(),
+                user,
                 request.getPassword()
         );
         Schedule savedSchedule = scheduleRepository.save(schedule);
@@ -34,8 +39,8 @@ public class ScheduleService {
                 savedSchedule.getScheduleId(),
                 savedSchedule.getTitle(),
                 savedSchedule.getContent(),
-                savedSchedule.getName(),
-                savedSchedule.getPassword(),
+                savedSchedule.getUser().getUsername(),
+                savedSchedule.getUser().getUserId(),
                 savedSchedule.getCreatedDate()
         );
     }
@@ -56,9 +61,10 @@ public class ScheduleService {
                 .toList();
         return new GetScheduleDetailResponse(
                 schedule.getScheduleId(),
-                schedule.getContent(),
-                schedule.getName(),
                 schedule.getTitle(),
+                schedule.getContent(),
+                schedule.getUser().getUsername(),
+                schedule.getUser().getUserId(),
                 schedule.getCreatedDate(),
                 schedule.getUpdatedDate(),
                 commentResponses
@@ -66,21 +72,22 @@ public class ScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public List<GetScheduleResponse> findAll(String name) {
+    public List<GetScheduleResponse> findAll(String username) {
         List<Schedule> schedules;
 
         // 파라미터가 null이거나 비어있으면 전체 조회
-        if (name == null || name.isEmpty()) {
+        if (username == null || username.isEmpty()) {
             schedules = scheduleRepository.findAllByOrderByUpdatedDateDesc();
         } else {
-            schedules = scheduleRepository.findAllByNameOrderByUpdatedDateDesc(name.trim());
+            schedules = scheduleRepository.findAllByUser_UsernameOrderByUpdatedDateDesc(username.trim());
         }
 
         return schedules.stream()
                 .map(schedule -> new GetScheduleResponse(
                         schedule.getScheduleId(),
                         schedule.getContent(),
-                        schedule.getName(),
+                        schedule.getUser().getUsername(),
+                        schedule.getUser().getUserId(),
                         schedule.getTitle(),
                         schedule.getCreatedDate(),
                         schedule.getUpdatedDate()
@@ -99,14 +106,12 @@ public class ScheduleService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        schedule.updateSchedule(
-                request.getTitle(),
-                request.getName());
+        schedule.updateSchedule(request.getTitle());
 
         return new UpdateScheduleResponse(
                 schedule.getScheduleId(),
+                schedule.getUser().getUsername(),
                 schedule.getTitle(),
-                schedule.getName().trim(),
                 schedule.getUpdatedDate()
         );
     }

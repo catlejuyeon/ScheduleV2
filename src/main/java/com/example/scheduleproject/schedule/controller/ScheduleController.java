@@ -33,8 +33,8 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedules")
-    public List<GetScheduleResponse> getSchedules(@RequestParam(required = false) String name) {
-        return scheduleService.findAll(name);
+    public List<GetScheduleResponse> getSchedules(@RequestParam(required = false) String username) {
+        return scheduleService.findAll(username);
     }
 
     @PatchMapping("/schedules/{scheduleId}")
