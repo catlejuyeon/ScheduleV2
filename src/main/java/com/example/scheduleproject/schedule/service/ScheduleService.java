@@ -74,14 +74,14 @@ public class ScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public List<GetScheduleResponse> findAll(String username) {
+    public List<GetScheduleResponse> findAll(Long userId) {
         List<Schedule> schedules;
 
         // 파라미터가 null이거나 비어있으면 전체 조회
-        if (username == null || username.isEmpty()) {
+        if (userId == null) {
             schedules = scheduleRepository.findAllByOrderByUpdatedDateDesc();
         } else {
-            schedules = scheduleRepository.findAllByUser_UsernameOrderByUpdatedDateDesc(username.trim());
+            schedules = scheduleRepository.findAllByUser_UserIdOrderByUpdatedDateDesc(userId);
         }
 
         return schedules.stream()
