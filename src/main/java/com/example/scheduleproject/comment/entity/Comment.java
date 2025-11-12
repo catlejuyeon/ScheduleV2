@@ -2,7 +2,10 @@ package com.example.scheduleproject.comment.entity;
 
 import com.example.scheduleproject.common.entity.BaseEntity;
 import com.example.scheduleproject.schedule.entity.Schedule;
+import com.example.scheduleproject.user.entity.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Entity
@@ -19,20 +22,20 @@ public class Comment extends BaseEntity {
 
     @Column(length = 100,nullable = false)
     private String content;
-    @Column(length = 20,nullable = false)
-    private String commentAuthor;
-    @Column(length = 100,nullable = false)
-    private String password;
 
-    //오류나는거같으니 유의
+    //유저 참조
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    //스케줄 참조
     @ManyToOne
     @JoinColumn(name="schedule_id",nullable = false)
     private Schedule schedule;
 
-    public Comment(String commentAuthor, String content, String password, Schedule schedule) {
-        this.commentAuthor = commentAuthor;
+    public Comment(String content, User user, Schedule schedule) {
         this.content = content;
-        this.password = password;
+        this.user = user;
         this.schedule = schedule;
     }
 }

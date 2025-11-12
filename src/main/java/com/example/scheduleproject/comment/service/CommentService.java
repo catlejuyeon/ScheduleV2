@@ -6,6 +6,9 @@ import com.example.scheduleproject.comment.entity.Comment;
 import com.example.scheduleproject.comment.repository.CommentRepository;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.schedule.repository.ScheduleRepository;
+import com.example.scheduleproject.user.entity.User;
+import com.example.scheduleproject.user.repository.UserRepository;
+import com.example.scheduleproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final ScheduleRepository scheduleRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public CreateCommentResponse save(Long scheduleId, CreateCommentRequest request){
         //1. 일정 조회
         Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(
-                        ()-> new IllegalStateException("존재하지 않는 일정입니다."));
+                .orElseThrow(()-> new IllegalStateException("존재하지 않는 일정입니다."));
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
         //2. 댓글 개수 제한
         if(schedule.getComments().size()>=10){
@@ -30,9 +36,8 @@ public class CommentService {
 
         //3. 댓글 생성
         Comment comment = new Comment(
-                request.getCommentAuthor(),
                 request.getContent(),
-                request.getPassword(),
+                user,
                 schedule
         );
 
@@ -42,7 +47,9 @@ public class CommentService {
         return new CreateCommentResponse(
                 savedComment.getCommentId(),
                 savedComment.getContent(),
-                savedComment.getCommentAuthor(),
+                savedComment.getUser().getUsername(),
+                savedComment.getUser().getUserId(),
+                savedComment.getSchedule().getScheduleId(),
                 savedComment.getCreatedDate()
         );
     }

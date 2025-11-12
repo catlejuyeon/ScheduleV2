@@ -54,7 +54,9 @@ public class ScheduleService {
                 .map(comment -> new GetCommentResponse(
                         comment.getCommentId(),
                         comment.getContent(),
-                        comment.getCommentAuthor(),
+                        comment.getUser().getUsername(),
+                        comment.getUser().getUserId(),
+                        comment.getSchedule().getScheduleId(),
                         comment.getCreatedDate(),
                         comment.getUpdatedDate()
                 ))
