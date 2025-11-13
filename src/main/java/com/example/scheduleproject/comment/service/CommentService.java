@@ -1,8 +1,10 @@
 package com.example.scheduleproject.comment.service;
 
 import com.example.scheduleproject.comment.dto.req.CreateCommentRequest;
+import com.example.scheduleproject.comment.dto.req.UpdateCommentRequest;
 import com.example.scheduleproject.comment.dto.res.CreateCommentResponse;
 import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
+import com.example.scheduleproject.comment.dto.res.UpdateCommentResponse;
 import com.example.scheduleproject.comment.entity.Comment;
 import com.example.scheduleproject.comment.repository.CommentRepository;
 import com.example.scheduleproject.schedule.entity.Schedule;
@@ -90,5 +92,18 @@ public class CommentService {
                 comment.getSchedule().getScheduleId(),
                 comment.getCreatedDate(),
                 comment.getUpdatedDate());
+    }
+
+    @Transactional
+    public UpdateCommentResponse updateOne(Long commentId, UpdateCommentRequest request) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(
+                ()->new IllegalStateException("없는 댓글입니다.")
+        );
+        comment.update(request.getContent());
+        return new UpdateCommentResponse(
+                comment.getCommentId(),
+                comment.getUser().getUsername(),
+                comment.getUpdatedDate()
+        );
     }
 }
