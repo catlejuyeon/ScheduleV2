@@ -33,7 +33,7 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedules")
-    public List<GetScheduleResponse> getSchedules(@RequestParam(required = false) long userId) {
+    public List<GetScheduleResponse> getSchedules(@RequestParam(required = false) Long userId) {
         return scheduleService.findAll(userId);
     }
 
