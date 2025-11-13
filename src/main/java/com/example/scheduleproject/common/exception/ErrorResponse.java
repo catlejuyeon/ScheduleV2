@@ -1,4 +1,4 @@
-package com.example.scheduleproject.exception;
+package com.example.scheduleproject.common.exception;
 
 import lombok.Getter;
 

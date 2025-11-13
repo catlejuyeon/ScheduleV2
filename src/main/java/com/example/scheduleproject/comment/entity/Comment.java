@@ -4,8 +4,6 @@ import com.example.scheduleproject.common.entity.BaseEntity;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.user.entity.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Entity
