@@ -42,4 +42,10 @@ public class CommentController {
             @RequestBody UpdateCommentRequest request){
         return ResponseEntity.status(HttpStatus.OK).body(commentService.updateOne(commentId,request));
     }
+
+    @DeleteMapping("/schedules/{scheduleId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId){
+        commentService.delete(commentId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 }

@@ -106,4 +106,13 @@ public class CommentService {
                 comment.getUpdatedDate()
         );
     }
+
+    @Transactional
+    public void delete(Long commentId) {
+        boolean existence=commentRepository.existsById(commentId);
+        if(!existence){
+            throw new IllegalStateException("없는 댓글입니다.");
+        }
+        commentRepository.deleteById(commentId);
+    }
 }
