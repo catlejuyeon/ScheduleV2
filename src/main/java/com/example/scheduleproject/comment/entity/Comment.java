@@ -29,7 +29,7 @@ public class Comment extends BaseEntity {
     private User user;
 
     //스케줄 참조
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="schedule_id",nullable = false)
     private Schedule schedule;
 

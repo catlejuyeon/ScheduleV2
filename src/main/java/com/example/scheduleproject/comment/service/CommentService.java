@@ -2,6 +2,7 @@ package com.example.scheduleproject.comment.service;
 
 import com.example.scheduleproject.comment.dto.req.CreateCommentRequest;
 import com.example.scheduleproject.comment.dto.res.CreateCommentResponse;
+import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
 import com.example.scheduleproject.comment.entity.Comment;
 import com.example.scheduleproject.comment.repository.CommentRepository;
 import com.example.scheduleproject.schedule.entity.Schedule;
@@ -11,7 +12,11 @@ import com.example.scheduleproject.user.repository.UserRepository;
 import com.example.scheduleproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,5 +57,38 @@ public class CommentService {
                 savedComment.getSchedule().getScheduleId(),
                 savedComment.getCreatedDate()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<GetCommentResponse> getAll(Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(()-> new IllegalStateException("존재하지 않는 일정입니다."));
+
+        List<Comment> comments=commentRepository.findBySchedule(schedule);
+        return comments.stream()
+                .map(comment -> new GetCommentResponse(
+                        comment.getCommentId(),
+                        comment.getContent(),
+                        comment.getUser().getUsername(),
+                        comment.getUser().getUserId(),
+                        comment.getSchedule().getScheduleId(),
+                        comment.getCreatedDate(),
+                        comment.getUpdatedDate()
+                        )).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public GetCommentResponse getOne(Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(
+                ()->new IllegalStateException("없는 댓글입니다.")
+        );
+        return new GetCommentResponse(
+                comment.getCommentId(),
+                comment.getContent(),
+                comment.getUser().getUsername(),
+                comment.getUser().getUserId(),
+                comment.getSchedule().getScheduleId(),
+                comment.getCreatedDate(),
+                comment.getUpdatedDate());
     }
 }
