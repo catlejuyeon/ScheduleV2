@@ -49,7 +49,7 @@ public class ScheduleController {
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long scheduleId,
             @Valid @RequestBody DeleteScheduleRequest request) {
-        scheduleService.delete(scheduleId, request.getPassword());
+        scheduleService.delete(scheduleId,request.getUserId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
