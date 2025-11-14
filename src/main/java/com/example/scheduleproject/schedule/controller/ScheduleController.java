@@ -37,7 +37,7 @@ public class ScheduleController {
         return scheduleService.findAll(userId);
     }
 
-    @PatchMapping("/schedules/{scheduleId}")
+    @PostMapping("/schedules/{scheduleId}")
     public ResponseEntity<UpdateScheduleResponse> updateSchedule(
             @PathVariable Long scheduleId,
             @Valid @RequestBody UpdateScheduleRequest request) {

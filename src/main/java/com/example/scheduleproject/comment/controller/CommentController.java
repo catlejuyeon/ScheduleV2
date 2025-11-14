@@ -36,7 +36,7 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.OK).body(commentService.getOne(commentId));
     }
 
-    @PatchMapping("/schedules/{scheduleId}/comments/{commentId}")
+    @PostMapping("/schedules/{scheduleId}/comments/{commentId}")
     public ResponseEntity<UpdateCommentResponse> updateComment(
             @PathVariable Long commentId,
             @RequestParam long userId,
