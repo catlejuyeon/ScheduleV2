@@ -14,7 +14,7 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name="schedules")
+@Table(name="schedule")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Schedule extends BaseEntity {
 

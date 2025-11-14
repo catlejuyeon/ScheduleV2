@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-@Table(name="comments")
+@Table(name="comment")
 public class Comment extends BaseEntity {
 
     @Id
