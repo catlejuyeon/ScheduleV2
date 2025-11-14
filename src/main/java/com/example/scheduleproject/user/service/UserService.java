@@ -9,6 +9,7 @@ import com.example.scheduleproject.user.repository.UserRepository;
 import jakarta.persistence.Table;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;  //암호화
 
     @Transactional
     public GetUserResponse signup(CreateUserRequest request) {
@@ -27,10 +29,13 @@ public class UserService {
             throw new IllegalArgumentException("중복된 이메일입니다.");
         }
 
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+
         User user = new User(
               request.getUsername(),
               request.getEmail(),
-              request.getPassword()
+                encodedPassword
         );
 
         User savedUser = userRepository.save(user);
@@ -49,7 +54,8 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다."));
 
-        if(!user.getPassword().equals(request.getPassword())){
+        // 평문 입력 vs 암호화된 DB 비밀번호 비교
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
 
@@ -94,9 +100,11 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        if(!user.getPassword().equals(password)){
+        // 평문 입력 vs 암호화된 DB 비밀번호 비교
+        if(!passwordEncoder.matches(password, user.getPassword())){
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
+
         userRepository.delete(user);
     }
 }
