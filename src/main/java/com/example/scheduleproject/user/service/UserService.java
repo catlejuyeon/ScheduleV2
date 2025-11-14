@@ -1,12 +1,13 @@
 package com.example.scheduleproject.user.service;
 
+import com.example.scheduleproject.common.exception.CustomException;
+import com.example.scheduleproject.common.exception.ExceptionMessage;
 import com.example.scheduleproject.user.dto.req.CreateUserRequest;
 import com.example.scheduleproject.user.dto.req.LoginRequest;
 import com.example.scheduleproject.user.dto.res.GetUserResponse;
 import com.example.scheduleproject.user.dto.res.LoginResponse;
 import com.example.scheduleproject.user.entity.User;
 import com.example.scheduleproject.user.repository.UserRepository;
-import jakarta.persistence.Table;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +27,7 @@ public class UserService {
     @Transactional
     public GetUserResponse signup(CreateUserRequest request) {
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new IllegalArgumentException("중복된 이메일입니다.");
+            throw new CustomException(ExceptionMessage.DUPLICATE_EMAIL);
         }
 
         // 비밀번호 암호화
@@ -52,11 +53,11 @@ public class UserService {
     @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public LoginResponse login(@Valid LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ExceptionMessage.INVALID_LOGIN));
 
         // 평문 입력 vs 암호화된 DB 비밀번호 비교
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ExceptionMessage.INVALID_PASSWORD);
         }
 
         return new LoginResponse(
@@ -84,7 +85,7 @@ public class UserService {
     @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public GetUserResponse findById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                .orElseThrow(()-> new CustomException(ExceptionMessage.USER_NOT_FOUND));
 
         return new GetUserResponse(
                 user.getUserId(),
@@ -95,14 +96,16 @@ public class UserService {
         );
     }
 
+
+
     @Transactional
     public void delete(Long userId, String password) {
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                .orElseThrow(()-> new CustomException(ExceptionMessage.USER_NOT_FOUND));
 
         // 평문 입력 vs 암호화된 DB 비밀번호 비교
         if(!passwordEncoder.matches(password, user.getPassword())){
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ExceptionMessage.INVALID_PASSWORD);
         }
 
         userRepository.delete(user);

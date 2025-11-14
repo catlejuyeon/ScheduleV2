@@ -13,17 +13,17 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    //1. 400
+    // 1. 400 - Validation 예외
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
-        Map<String, String>errors=new HashMap<>();
-        e.getBindingResult().getAllErrors().forEach(error->{
-            String fieldName= ((FieldError) error).getField();
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName,errorMessage);
+            errors.put(fieldName, errorMessage);
         });
 
-        ErrorResponse errorResponse=new ErrorResponse(
+        ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "입력값이 올바르지 않습니다.",
                 errors,
@@ -33,35 +33,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    //2. 401
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException e) {
-        ErrorResponse errorResponse=new ErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
-                e.getMessage(),
+    // 2. CustomException 처리
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
+        ExceptionMessage errorMessage = e.getErrorMessage();
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                errorMessage.getStatus().value(),
+                errorMessage.getMessage(),
                 null,
                 LocalDateTime.now()
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+
+        return ResponseEntity.status(errorMessage.getStatus()).body(errorResponse);
     }
 
-    //3. 404
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException e) {
-        ErrorResponse errorResponse=new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                e.getMessage(),
-                null,
-                LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-    }
-
-    //4. 500(그외 모든 예외)
+    // 3. 500 - 기타 예외
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        ErrorResponse errorResponse=new ErrorResponse(
+        ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "서버 내부 오류입니다.",
                 null,

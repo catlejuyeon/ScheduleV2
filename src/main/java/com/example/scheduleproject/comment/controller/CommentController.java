@@ -39,13 +39,14 @@ public class CommentController {
     @PatchMapping("/schedules/{scheduleId}/comments/{commentId}")
     public ResponseEntity<UpdateCommentResponse> updateComment(
             @PathVariable Long commentId,
+            @RequestParam long userId,
             @RequestBody UpdateCommentRequest request){
-        return ResponseEntity.status(HttpStatus.OK).body(commentService.updateOne(commentId,request));
+        return ResponseEntity.status(HttpStatus.OK).body(commentService.updateOne(commentId,request,userId));
     }
 
     @DeleteMapping("/schedules/{scheduleId}/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId){
-        commentService.delete(commentId);
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId,@RequestParam long userId){
+        commentService.delete(commentId,userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -7,6 +7,8 @@ import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
 import com.example.scheduleproject.comment.dto.res.UpdateCommentResponse;
 import com.example.scheduleproject.comment.entity.Comment;
 import com.example.scheduleproject.comment.repository.CommentRepository;
+import com.example.scheduleproject.common.exception.CustomException;
+import com.example.scheduleproject.common.exception.ExceptionMessage;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.schedule.repository.ScheduleRepository;
 import com.example.scheduleproject.user.entity.User;
@@ -31,24 +33,25 @@ public class CommentService {
     public CreateCommentResponse save(Long scheduleId, CreateCommentRequest request){
         //1. 일정 조회
         Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(()-> new IllegalStateException("존재하지 않는 일정입니다."));
+                .orElseThrow(()-> new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
 
+        //2. 유저 조회(댓글 작성자 정보를 저장하기 위해)
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new CustomException(ExceptionMessage.USER_NOT_FOUND));
 
-        //2. 댓글 개수 제한
+        //3. 댓글 개수 제한
         if(schedule.getComments().size()>=10){
-            throw new IllegalStateException("이 일정에는 더 이상 댓글을 작성할 수 없습니다.");
+            throw new CustomException(ExceptionMessage.COMMENT_MAX_EXCEEDED);
         }
 
-        //3. 댓글 생성
+        //4. 댓글 생성
         Comment comment = new Comment(
                 request.getContent(),
                 user,
                 schedule
         );
 
-        //4. 댓글 저장
+        //5. 댓글 저장
         Comment savedComment = commentRepository.save(comment);
 
         return new CreateCommentResponse(
@@ -64,7 +67,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<GetCommentResponse> getAll(Long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(()-> new IllegalStateException("존재하지 않는 일정입니다."));
+                .orElseThrow(()-> new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
 
         List<Comment> comments=commentRepository.findBySchedule(schedule);
         return comments.stream()
@@ -82,8 +85,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public GetCommentResponse getOne(Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(
-                ()->new IllegalStateException("없는 댓글입니다.")
-        );
+                ()->new CustomException(ExceptionMessage.COMMENT_NOT_FOUND));
         return new GetCommentResponse(
                 comment.getCommentId(),
                 comment.getContent(),
@@ -95,23 +97,35 @@ public class CommentService {
     }
 
     @Transactional
-    public UpdateCommentResponse updateOne(Long commentId, UpdateCommentRequest request) {
+    public UpdateCommentResponse updateOne(Long commentId, UpdateCommentRequest request,long userId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(
-                ()->new IllegalStateException("없는 댓글입니다.")
-        );
+                ()->new CustomException(ExceptionMessage.COMMENT_NOT_FOUND));
+
+        // 권한 검증
+        if (!comment.getUser().getUserId().equals(userId)) {
+            throw new CustomException(ExceptionMessage.COMMENT_NO_PERMISSION);
+        }
+
         comment.update(request.getContent());
         return new UpdateCommentResponse(
                 comment.getCommentId(),
                 comment.getUser().getUsername(),
+                comment.getUser().getUserId(),
                 comment.getUpdatedDate()
         );
     }
 
     @Transactional
-    public void delete(Long commentId) {
+    public void delete(Long commentId,long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CustomException(ExceptionMessage.COMMENT_NOT_FOUND));
+        // 권한 검증
+        if (!comment.getUser().getUserId().equals(userId)) {
+            throw new CustomException(ExceptionMessage.COMMENT_NO_PERMISSION);
+        }
         boolean existence=commentRepository.existsById(commentId);
         if(!existence){
-            throw new IllegalStateException("없는 댓글입니다.");
+            throw new CustomException(ExceptionMessage.COMMENT_NOT_FOUND);
         }
         commentRepository.deleteById(commentId);
     }
