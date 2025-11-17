@@ -5,18 +5,17 @@ import com.example.scheduleproject.common.exception.CustomException;
 import com.example.scheduleproject.common.exception.ExceptionMessage;
 import com.example.scheduleproject.schedule.dto.req.CreateScheduleRequest;
 import com.example.scheduleproject.schedule.dto.req.UpdateScheduleRequest;
-import com.example.scheduleproject.schedule.dto.res.CreateScheduleResponse;
-import com.example.scheduleproject.schedule.dto.res.GetScheduleDetailResponse;
-import com.example.scheduleproject.schedule.dto.res.GetScheduleResponse;
-import com.example.scheduleproject.schedule.dto.res.UpdateScheduleResponse;
+import com.example.scheduleproject.schedule.dto.res.*;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import com.example.scheduleproject.schedule.repository.ScheduleRepository;
 import com.example.scheduleproject.user.entity.User;
 import com.example.scheduleproject.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -131,5 +130,25 @@ public class ScheduleService {
 
         // 삭제
         scheduleRepository.deleteById(scheduleId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SchedulePageResponse> getScheduleWithPagination(int page, int size){
+        //페이지는 0부터 시작함
+        if(page <0)page=0;
+        if (size<=0)size=10;    //기본값10
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return scheduleRepository.findAllWithUserOrderByUpdatedDateDesc(pageable)
+                .map(schedule -> SchedulePageResponse.builder()
+                        .scheduleId(schedule.getScheduleId())
+                        .title(schedule.getTitle())
+                        .content(schedule.getContent())
+                        .commentCount((long) schedule.getComments().size())
+                        .username(schedule.getUser().getUsername())
+                        .createdDate(schedule.getCreatedDate())
+                        .updatedDate(schedule.getUpdatedDate())
+                        .build());
     }
 }

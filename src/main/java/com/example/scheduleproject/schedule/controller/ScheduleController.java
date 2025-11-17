@@ -3,13 +3,11 @@ package com.example.scheduleproject.schedule.controller;
 import com.example.scheduleproject.schedule.dto.req.CreateScheduleRequest;
 import com.example.scheduleproject.schedule.dto.req.DeleteScheduleRequest;
 import com.example.scheduleproject.schedule.dto.req.UpdateScheduleRequest;
-import com.example.scheduleproject.schedule.dto.res.CreateScheduleResponse;
-import com.example.scheduleproject.schedule.dto.res.GetScheduleDetailResponse;
-import com.example.scheduleproject.schedule.dto.res.GetScheduleResponse;
-import com.example.scheduleproject.schedule.dto.res.UpdateScheduleResponse;
+import com.example.scheduleproject.schedule.dto.res.*;
 import com.example.scheduleproject.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +48,14 @@ public class ScheduleController {
             @Valid @RequestBody DeleteScheduleRequest request) {
         scheduleService.delete(scheduleId,request.getUserId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping("/schedules/page")
+    public ResponseEntity<Page<SchedulePageResponse>> getScheduleWithPagination(
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "10")int size){
+        Page<SchedulePageResponse> responses=scheduleService.getScheduleWithPagination(page,size);
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
     }
 }
 
