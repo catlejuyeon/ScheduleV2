@@ -128,28 +128,12 @@ public class ScheduleService {
         scheduleRepository.deleteById(scheduleId);
     }
 
-    // ✅ 개선된 페이징 조회
     @Transactional(readOnly = true)
     public Page<SchedulePageResponse> getScheduleWithPagination(int page, int size) {
         if (page < 0) page = 0;
         if (size <= 0) size = 10;
 
         Pageable pageable = PageRequest.of(page, size);
-
-        return scheduleRepository.findAllWithUserOrderByUpdatedDateDesc(pageable)
-                .map(schedule -> {
-                    // CommentRepository에서 댓글 개수 조회
-                    long commentCount = commentRepository.countBySchedule_ScheduleId(schedule.getScheduleId());
-
-                    return SchedulePageResponse.builder()
-                            .scheduleId(schedule.getScheduleId())
-                            .title(schedule.getTitle())
-                            .content(schedule.getContent())
-                            .commentCount(commentCount)
-                            .username(schedule.getUser().getUsername())
-                            .createdDate(schedule.getCreatedDate())
-                            .updatedDate(schedule.getUpdatedDate())
-                            .build();
-                });
+        return scheduleRepository.findAllWithCommentCountPaging(pageable);
     }
 }

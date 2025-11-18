@@ -51,11 +51,11 @@ public class ScheduleController {
     }
 
     @GetMapping("/schedules/page")
-    public ResponseEntity<Page<SchedulePageResponse>> getScheduleWithPagination(
-            @RequestParam(defaultValue = "0")int page,
-            @RequestParam(defaultValue = "10")int size){
-        Page<SchedulePageResponse> responses=scheduleService.getScheduleWithPagination(page,size);
-        return ResponseEntity.status(HttpStatus.OK).body(responses);
+    public ResponseEntity<Page<SchedulePageResponse>> getSchedulesWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<SchedulePageResponse> response = scheduleService.getScheduleWithPagination(page, size);
+        return ResponseEntity.ok(response);
     }
 }
 

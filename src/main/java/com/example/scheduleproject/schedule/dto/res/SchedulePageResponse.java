@@ -15,6 +15,7 @@ public class SchedulePageResponse {
     private String content;
     private Long commentCount;
     private String username;
+    private Long userId;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
 }

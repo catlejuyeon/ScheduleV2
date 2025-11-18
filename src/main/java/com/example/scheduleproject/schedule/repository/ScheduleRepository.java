@@ -2,6 +2,7 @@ package com.example.scheduleproject.schedule.repository;
 
 import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
 import com.example.scheduleproject.schedule.dto.res.GetScheduleDetailResponse;
+import com.example.scheduleproject.schedule.dto.res.SchedulePageResponse;
 import com.example.scheduleproject.schedule.entity.Schedule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,8 +38,22 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
     // 전체 조회 + 수정일 내림차순
     List<Schedule> findAllByOrderByUpdatedDateDesc();
 
-    @Query("SELECT s FROM Schedule s " +
-            "JOIN s.user " +
-            "ORDER BY s.updatedDate DESC")
-    Page<Schedule> findAllWithUserOrderByUpdatedDateDesc(Pageable pageable);
+    @Query("""
+        SELECT new com.example.scheduleproject.schedule.dto.res.SchedulePageResponse(
+            s.scheduleId,
+            s.title,
+            s.content,
+            COUNT(c),
+            u.username,
+            u.userId,
+            s.createdDate,
+            s.updatedDate
+        )
+        FROM Schedule s
+        JOIN s.user u
+        LEFT JOIN Comment c ON c.schedule.scheduleId = s.scheduleId
+        GROUP BY s.scheduleId, s.title, s.content, u.username, u.userId, s.createdDate, s.updatedDate
+        ORDER BY s.updatedDate DESC
+    """)
+    Page<SchedulePageResponse> findAllWithCommentCountPaging(Pageable pageable);
 }
