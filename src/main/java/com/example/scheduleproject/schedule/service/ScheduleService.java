@@ -47,28 +47,22 @@ public class ScheduleService {
 
     @Transactional(readOnly = true)
     public GetScheduleDetailResponse findOne(Long scheduleId) {
-        Schedule schedule=scheduleRepository.findByIdWithComments(scheduleId)
-                .orElseThrow(()->new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
+        // 1️⃣ Schedule DTO 조회 (댓글 제외)
+        GetScheduleDetailResponse scheduleDetail = scheduleRepository.findScheduleDetail(scheduleId)
+                .orElseThrow(() -> new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
 
-        List<GetCommentResponse> commentResponses = schedule.getComments().stream()
-                .map(comment -> new GetCommentResponse(
-                        comment.getCommentId(),
-                        comment.getContent(),
-                        comment.getUser().getUsername(),
-                        comment.getUser().getUserId(),
-                        comment.getSchedule().getScheduleId(),
-                        comment.getCreatedDate(),
-                        comment.getUpdatedDate()
-                ))
-                .toList();
+        // 2️⃣ 댓글만 별도 조회
+        List<GetCommentResponse> commentResponses = scheduleRepository.findCommentsByScheduleId(scheduleId);
+
+        // 3️⃣ DTO에 댓글 넣고 반환
         return new GetScheduleDetailResponse(
-                schedule.getScheduleId(),
-                schedule.getTitle(),
-                schedule.getContent(),
-                schedule.getUser().getUsername(),
-                schedule.getUser().getUserId(),
-                schedule.getCreatedDate(),
-                schedule.getUpdatedDate(),
+                scheduleDetail.getScheduleId(),
+                scheduleDetail.getTitle(),
+                scheduleDetail.getContent(),
+                scheduleDetail.getUsername(),
+                scheduleDetail.getUserId(),
+                scheduleDetail.getCreatedDate(),
+                scheduleDetail.getUpdatedDate(),
                 commentResponses
         );
     }
