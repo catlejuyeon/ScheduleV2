@@ -17,5 +17,12 @@ public class GetScheduleDetailResponse {
     private final Long userId;
     private final LocalDateTime createdDate;
     private final LocalDateTime updatedDate;
-    private final List<GetCommentResponse> comments;  // 댓글 목록 추가!
+    private final List<GetCommentResponse> comments;
+
+    // 댓글 없는 경우를 위한 생성자 오버로딩
+    public GetScheduleDetailResponse(Long scheduleId, String title, String content,
+                                     String username, Long userId,
+                                     LocalDateTime createdDate, LocalDateTime updatedDate) {
+        this(scheduleId, title, content, username, userId, createdDate, updatedDate, null);
+    }
 }

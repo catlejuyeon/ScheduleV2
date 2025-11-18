@@ -23,8 +23,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
             u.username,
             u.userId,
             s.createdDate,
-            s.updatedDate,
-            null
+            s.updatedDate
         )
         FROM Schedule s
         JOIN s.user u
