@@ -39,7 +39,4 @@ public class Schedule extends BaseEntity {
     public void updateSchedule(String title){
         this.title=title;
     }
-
-    @OneToMany(mappedBy = "schedule",cascade= CascadeType.ALL,orphanRemoval = true)
-    private List<Comment> comments = new ArrayList<>();
 }

@@ -1,6 +1,7 @@
 package com.example.scheduleproject.schedule.service;
 
 import com.example.scheduleproject.comment.dto.res.GetCommentResponse;
+import com.example.scheduleproject.comment.repository.CommentRepository;
 import com.example.scheduleproject.common.exception.CustomException;
 import com.example.scheduleproject.common.exception.ExceptionMessage;
 import com.example.scheduleproject.schedule.dto.req.CreateScheduleRequest;
@@ -23,6 +24,7 @@ import java.util.List;
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public CreateScheduleResponse save(CreateScheduleRequest request) {
@@ -47,23 +49,23 @@ public class ScheduleService {
 
     @Transactional(readOnly = true)
     public GetScheduleDetailResponse findOne(Long scheduleId) {
-        // 1️⃣ Schedule DTO 조회 (댓글 제외)
-        GetScheduleDetailResponse scheduleDetail = scheduleRepository.findScheduleDetail(scheduleId)
+        // 1️⃣ Schedule 조회
+        GetScheduleDetailResponse schedule = scheduleRepository.findScheduleDetail(scheduleId)
                 .orElseThrow(() -> new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
 
-        // 2️⃣ 댓글만 별도 조회
-        List<GetCommentResponse> commentResponses = scheduleRepository.findCommentsByScheduleId(scheduleId);
+        // 2️⃣ 댓글은 CommentRepository에서 조회
+        List<GetCommentResponse> comments = commentRepository.findCommentsByScheduleIdAsDto(scheduleId);
 
-        // 3️⃣ DTO에 댓글 넣고 반환
+        // 3️⃣ 응답 생성
         return new GetScheduleDetailResponse(
-                scheduleDetail.getScheduleId(),
-                scheduleDetail.getTitle(),
-                scheduleDetail.getContent(),
-                scheduleDetail.getUsername(),
-                scheduleDetail.getUserId(),
-                scheduleDetail.getCreatedDate(),
-                scheduleDetail.getUpdatedDate(),
-                commentResponses
+                schedule.getScheduleId(),
+                schedule.getTitle(),
+                schedule.getContent(),
+                schedule.getUsername(),
+                schedule.getUserId(),
+                schedule.getCreatedDate(),
+                schedule.getUpdatedDate(),
+                comments
         );
     }
 
@@ -126,23 +128,28 @@ public class ScheduleService {
         scheduleRepository.deleteById(scheduleId);
     }
 
+    // ✅ 개선된 페이징 조회
     @Transactional(readOnly = true)
-    public Page<SchedulePageResponse> getScheduleWithPagination(int page, int size){
-        //페이지는 0부터 시작함
-        if(page <0)page=0;
-        if (size<=0)size=10;    //기본값10
+    public Page<SchedulePageResponse> getScheduleWithPagination(int page, int size) {
+        if (page < 0) page = 0;
+        if (size <= 0) size = 10;
 
         Pageable pageable = PageRequest.of(page, size);
 
         return scheduleRepository.findAllWithUserOrderByUpdatedDateDesc(pageable)
-                .map(schedule -> SchedulePageResponse.builder()
-                        .scheduleId(schedule.getScheduleId())
-                        .title(schedule.getTitle())
-                        .content(schedule.getContent())
-                        .commentCount((long) schedule.getComments().size())
-                        .username(schedule.getUser().getUsername())
-                        .createdDate(schedule.getCreatedDate())
-                        .updatedDate(schedule.getUpdatedDate())
-                        .build());
+                .map(schedule -> {
+                    // CommentRepository에서 댓글 개수 조회
+                    long commentCount = commentRepository.countBySchedule_ScheduleId(schedule.getScheduleId());
+
+                    return SchedulePageResponse.builder()
+                            .scheduleId(schedule.getScheduleId())
+                            .title(schedule.getTitle())
+                            .content(schedule.getContent())
+                            .commentCount(commentCount)
+                            .username(schedule.getUser().getUsername())
+                            .createdDate(schedule.getCreatedDate())
+                            .updatedDate(schedule.getUpdatedDate())
+                            .build();
+                });
     }
 }

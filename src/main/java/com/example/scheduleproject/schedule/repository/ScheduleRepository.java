@@ -31,25 +31,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
     """)
     Optional<GetScheduleDetailResponse> findScheduleDetail(@Param("scheduleId") Long scheduleId);
 
-    // 댓글 DTO 조회
-    @Query("""
-        SELECT new com.example.scheduleproject.comment.dto.res.GetCommentResponse(
-            c.commentId,
-            c.content,
-            u.username,
-            u.userId,
-            s.scheduleId,
-            c.createdDate,
-            c.updatedDate
-        )
-        FROM Comment c
-        JOIN c.user u
-        JOIN c.schedule s
-        WHERE s.scheduleId = :scheduleId
-        ORDER BY c.createdDate ASC
-    """)
-    List<GetCommentResponse> findCommentsByScheduleId(@Param("scheduleId") Long scheduleId);
-
     // 작성자명으로 조회 + 수정일 내림차순
     List<Schedule> findAllByUser_UserIdOrderByUpdatedDateDesc(Long userId);
 

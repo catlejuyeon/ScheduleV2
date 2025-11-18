@@ -40,7 +40,8 @@ public class CommentService {
                 .orElseThrow(() -> new CustomException(ExceptionMessage.USER_NOT_FOUND));
 
         //3. 댓글 개수 제한
-        if(schedule.getComments().size()>=10){
+        long commentCount = commentRepository.countBySchedule_ScheduleId(scheduleId);
+        if(commentCount>=10){
             throw new CustomException(ExceptionMessage.COMMENT_MAX_EXCEEDED);
         }
 
@@ -64,28 +65,23 @@ public class CommentService {
         );
     }
 
+    // ✅ 개선: DTO 조회로 변경
     @Transactional(readOnly = true)
     public List<GetCommentResponse> getAll(Long scheduleId) {
-        Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(()-> new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
+        // 일정 존재 확인
+        scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new CustomException(ExceptionMessage.SCHEDULE_NOT_FOUND));
 
-        List<Comment> comments=commentRepository.findBySchedule(schedule);
-        return comments.stream()
-                .map(comment -> new GetCommentResponse(
-                        comment.getCommentId(),
-                        comment.getContent(),
-                        comment.getUser().getUsername(),
-                        comment.getUser().getUserId(),
-                        comment.getSchedule().getScheduleId(),
-                        comment.getCreatedDate(),
-                        comment.getUpdatedDate()
-                        )).toList();
+        // CommentRepository의 DTO 조회 메서드 사용
+        return commentRepository.findCommentsByScheduleIdAsDto(scheduleId);
     }
 
+    // ✅ 개선: 단건 조회
     @Transactional(readOnly = true)
     public GetCommentResponse getOne(Long commentId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(
-                ()->new CustomException(ExceptionMessage.COMMENT_NOT_FOUND));
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CustomException(ExceptionMessage.COMMENT_NOT_FOUND));
+
         return new GetCommentResponse(
                 comment.getCommentId(),
                 comment.getContent(),
@@ -93,8 +89,10 @@ public class CommentService {
                 comment.getUser().getUserId(),
                 comment.getSchedule().getScheduleId(),
                 comment.getCreatedDate(),
-                comment.getUpdatedDate());
+                comment.getUpdatedDate()
+        );
     }
+
 
     @Transactional
     public UpdateCommentResponse updateOne(Long commentId, UpdateCommentRequest request,long userId) {
