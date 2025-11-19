@@ -8,6 +8,7 @@ import com.example.scheduleproject.user.dto.res.GetUserResponse;
 import com.example.scheduleproject.user.dto.res.LoginResponse;
 import com.example.scheduleproject.user.entity.User;
 import com.example.scheduleproject.user.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,29 +51,30 @@ public class UserService {
         );
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-    public LoginResponse login(@Valid LoginRequest request) {
+    private void verifyPassword(String rawPassword, String encodedPassword) {
+        if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+            throw new CustomException(ExceptionMessage.INVALID_PASSWORD);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse login(@Valid LoginRequest request, HttpSession session) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException(ExceptionMessage.INVALID_LOGIN));
 
-        // 평문 입력 vs 암호화된 DB 비밀번호 비교
-        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-            throw new CustomException(ExceptionMessage.INVALID_PASSWORD);
-        }
+        verifyPassword(request.getPassword(), user.getPassword());
 
-        return new LoginResponse(
-            user.getUserId(),
-            user.getUsername(),
-            user.getEmail()
-        );
+        // 세션 저장 로직을 여기서 처리
+        session.setAttribute("userId", user.getUserId());
+        session.setAttribute("email", user.getEmail());
+
+        return new LoginResponse(user.getUserId(), user.getUsername(), user.getEmail());
     }
 
     @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public List<GetUserResponse> findAll() {
-        List<User> users= (List<User>) userRepository.findAll();
-
-        return users.stream()
-                .map(user-> new GetUserResponse(
+        return userRepository.findAll().stream()
+                .map(user -> new GetUserResponse(
                         user.getUserId(),
                         user.getUsername(),
                         user.getEmail(),
@@ -103,10 +105,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new CustomException(ExceptionMessage.USER_NOT_FOUND));
 
-        // 평문 입력 vs 암호화된 DB 비밀번호 비교
-        if(!passwordEncoder.matches(password, user.getPassword())){
-            throw new CustomException(ExceptionMessage.INVALID_PASSWORD);
-        }
+        verifyPassword(password, user.getPassword());
 
         userRepository.delete(user);
     }

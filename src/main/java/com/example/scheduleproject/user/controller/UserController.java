@@ -34,14 +34,8 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest){
-        LoginResponse response= userService.login(request);
-
-        HttpSession session = httpRequest.getSession();
-        session.setAttribute("userId", response.getUserId());
-        session.setAttribute("email", response.getEmail());
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+            HttpSession session) {
+        return ResponseEntity.ok(userService.login(request, session));
     }
 
     //유저 전체 조회
