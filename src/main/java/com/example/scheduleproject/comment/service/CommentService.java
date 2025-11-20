@@ -65,7 +65,7 @@ public class CommentService {
         );
     }
 
-    // ✅ 개선: DTO 조회로 변경
+    // DTO 조회로 변경
     @Transactional(readOnly = true)
     public List<GetCommentResponse> getAll(Long scheduleId) {
         // 일정 존재 확인
@@ -76,7 +76,7 @@ public class CommentService {
         return commentRepository.findCommentsByScheduleIdAsDto(scheduleId);
     }
 
-    // ✅ 개선: 단건 조회
+    // 단건 조회
     @Transactional(readOnly = true)
     public GetCommentResponse getOne(Long commentId) {
         Comment comment = commentRepository.findById(commentId)

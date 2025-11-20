@@ -1,18 +1,27 @@
 # 일정 관리 애플리케이션 (Schedule Management API)
 Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 기능과 댓글 기능을 제공하며, 비밀번호 기반 인증을 통해 일정을 안전하게 관리할 수 있습니다.
 ## 🎯 주요 기능
+### 사용자 관리
+- 회원가입, 로그인 (세션 기반)
+- 사용자 조회 (전체, 단건)
+- 사용자 삭제
+- 비밀번호 암호화 (BCrypt)
 ### 일정 관리
 - 일정 생성, 조회, 수정, 삭제 (CRUD)
-- 작성자명으로 일정 검색
+- 유저 아이디로 일정 검색
 - 수정일 기준 내림차순 정렬
-- 비밀번호 기반 수정/삭제 권한 관리
+- 로그인 세션 기반 수정/삭제 권한 관리
+- 페이지네이션 조회
 ### 댓글 기능
 - 일정에 대한 댓글 작성 및 관리
 - 일정 조회 시 댓글 목록 포함
+- 사용자 권한 검증
+- 댓글 개수 제한 (일정당 최대 10개)
 ### 데이터 검증
-- 입력값 유효성 검증 (Validation)
+- Spring Validation을 통한 입력값 검증
 - 전역 예외 처리 (GlobalExceptionHandler)
 - 적절한 HTTP 상태 코드 반환
+- 일관된 에러 응답 포맷
 ## 🛠 기술 스택
 - Framework: Spring Boot 3.5.7
 - Language: Java 17
@@ -22,249 +31,154 @@ Spring Boot 기반의 RESTful API 일정 관리 시스템입니다. 일정 CRUD 
 - Validation: Spring Validation
 - Lombok: 코드 간소화
 ## 📡 API 명세
-### 일정 API
-| 기능                 | Method | URL                     | Request Body          | Response       |
-|----------------------|--------|-------------------------|-----------------------|----------------|
-| 일정 생성            | POST   | /schedules              | CreateScheduleRequest | 201 Created    |
-| 일정 전체 조회       | GET    | /schedules              | -                     | 200 OK         |
-| 일정 검색 (작성자명) | GET    | /schedules?name={name}  | -                     | 200 OK         |
-| 일정 단건 조회       | GET    | /schedules/{scheduleId} | -                     | 200 OK         |
-| 일정 수정            | PATCH  | /schedules/{scheduleId} | UpdateScheduleRequest | 200 OK         |
-| 일정 삭제            | DELETE | /schedules/{scheduleId} | DeleteScheduleRequest | 204 No Content |
-### Request/Response 예시
-#### 일정 생성 (POST /schedules)
-```
-// Request
-{
-    "title":"놀이동산 가는날",
-    "content":"누나랑 엄마랑 같이 노는 날",
-    "name":"동이",
-    "password":"asd1243"
-}
-```
-#### Request Fields
-
-| 필드명     | 타입    | 필수 여부   | 설명     | 제약 조건           | 비고                       |
-|----------|--------|-----------|---------|-------------------|---------------------------|
-| title    | String | Required  | 일정 제목 | 최대 30자, 공백 불가  | @NotBlank, @Size(max=30)  |
-| content  | String | Required  | 일정 내용 | 최대 200자, 공백 불가 | @NotBlank, @Size(max=200) |
-| name     | String | Required  | 작성자명  | 공백 불가            | @NotBlank                |
-| password | String | Required  | 비밀번호  | 공백 불가            | @NotBlank, 응답에는 미포함   |
-
-```
-// Response
-{
-    "title": "놀이동산 가는날",
-    "name": "동이",
-    "password": "asd1243",
-    "created_date": "2025-11-06T12:00:35.540722",
-    "id": 1,
-    "contents": "누나랑 엄마랑 같이 노는 날"
-}
-```
-#### Response Fields
-| 파라미터명     | 타입    |    설명        |
-|-------------|--------|---------------|
-| scheduleId  | Long   | 삭제할 일정의 ID |
-| title       | String | 일정 제목       |
-| content     | String | 일정 내용       |
-| name        | String | 작성자명        |
-| createdDate | String | 생성 일시       |
-| updatedDate | String | 수정 일시       |
-### 댓글 생성 (GET /schedules/{scheduleId}/comments)
-```
-// Request
-{
-    "content":"정말 기대되는 일정이야 동이야",
-    "commentAuthor" : "누나",
-    "password":"asd1243"
-}
-```
-#### Request Fields
-| 필드명          | 타입    | 설명     |
-|---------------|--------|---------|
-| content       | String | 댓글 내용 |
-| commentAuthor | String | 작성자명  |
-| password      | String | 비밀번호  |
-
-```
-// Response
-{
-    "commentId": 2,
-    "content": "정말 기대되는 일정이야 동이야",
-    "commentAuthor": "누나",
-    "created_date": "2025-11-06T12:05:08.151606"
-}
-```
-#### Response Fields
-| 필드명        | 타입   | 설명      |
-|---------------|--------|-----------|
-| content       | String | 댓글 내용 |
-| commentAuthor | String | 작성자명  |
-| password      | String | 비밀번호  |
-| commentId     | Long   | 댓글ID    |
-<img width="542" height="195" alt="image" src="https://github.com/user-attachments/assets/ac181d3e-47ec-48f9-8bfa-fd9446f2798f" />
-
-일정당 댓글은 10개 이하로 11개부터 댓글 작성시 전역예외처리 메세지 출력
-### 일정 단건 조회 (GET /schedules/{scheduleId})
-```
-// Response
-{
-    "scheduleId": 1,
-    "title": "누나랑 엄마랑 같이 노는 날",
-    "content": "동이",
-    "name": "놀이동산 가는날",
-    "createdDate": "2025-11-06T12:00:35.540722",
-    "updatedDate": "2025-11-06T12:00:35.540722",
-    "comments": [
-        {
-            "commentId": 1,
-            "content": "정말 기대되는 일정이야 동이야",
-            "commentAuthor": "누나",
-            "createdDate": "2025-11-06T12:05:06.568197",
-            "updatedDate": "2025-11-06T12:05:06.568197"
-        },
-        {
-            "commentId": 2,
-            "content": "정말 기대되는 일정이야 동이야",
-            "commentAuthor": "누나",
-            "createdDate": "2025-11-06T12:05:08.151606",
-            "updatedDate": "2025-11-06T12:05:08.151606"
-        },
-        {
-            "commentId": 3,
-            "content": "정말 기대되는 일정이야 동이야",
-            "commentAuthor": "누나",
-            "createdDate": "2025-11-06T12:05:58.465203",
-            "updatedDate": "2025-11-06T12:05:58.465203"
-        }
-    ]
-}
-```
-#### Response
-| 필드명      | 타입           | 설명                    |
-|-------------|----------------|-------------------------|
-| scheduleId  | Long           | 일정 고유 ID            |
-| title       | String         | 일정 제목               |
-| content     | String         | 일정 내용               |
-| name        | String         | 일정 작성자 이름        |
-| createdDate | String         | 일정 생성 일시          |
-| updatedDate | String         | 일정 수정 일시          |
-| comments    | Array<Comment> | 일정에 달린 댓글 리스트 |
-#### Comment 객체 구조
-| 필드명        | 타입   | 설명           |
-|---------------|--------|----------------|
-| commentId     | Long   | 댓글 고유 ID   |
-| content       | String | 댓글 내용      |
-| commentAuthor | String | 댓글 작성자    |
-| createdDate   | String | 댓글 생성 일시 |
-|  updatedDate  | String | 댓글 수정 일시 |
-### 일정 수정 (PATCH /schedules/{scheduleId})
-```
-// Request
-{
-    "title": "놀이동산이 아니고 병원이었다..",
-    "name" : "세상에서 제일 불쌍한 고양이",
-    "password":"asd1243"
-}
-```
-#### Request Fields
-| 필드명     | 타입    | 필수 여부   | 설명          | 제약 조건          | 비고                      |
-|----------|--------|-----------|--------------|------------------|--------------------------|
-| title    | String | Required  | 수정할 일정 제목 | 최대 30자, 공백 불가 | @NotBlank, @Size(max=30) |
-| name     | String | Required  | 수정할 작성자명  | 공백 불가           | @NotBlank               |
-| password | String | Required  | 비밀번호 확인   | 공백 불가           | 생성 시 입력한 비밀번호       |
-```
-// Response
-{
-    "scheduleId": 1,
-    "name": "놀이동산이 아니고 병원이었다..",
-    "title": "세상에서 제일 불쌍한 고양이",
-    "updatedDate": "2025-11-06T12:00:35.540722"
-}
-```
-#### Response Fields
-|   필드명      | 타입    | 설명                           |
-|-------------|--------|--------------------------------|
-| scheduleId  | Long   | 일정 고유 ID                   |
-| title       | String | 수정된 제목                    |
-| name        | String | 수정된 작성자명                |
-| updatedDate | String | 수정 완료 시각 (자동 업데이트) |
-<img width="528" height="186" alt="image" src="https://github.com/user-attachments/assets/770e085b-ecc9-48ed-8eb0-08bdffe49982" />
-
-처음 일정 생성 됐을 때 비밀번호와 수정할 때 입력한 비밀번호가 맞지 않을 때 전역예외처리 메세지 출력
-### 일정 삭제 (DELETE /schedules/{scheduleId})
-```
-// Request
-{
-    "password":"asd1243"
-}
-```
-<img width="552" height="122" alt="image" src="https://github.com/user-attachments/assets/fa8a4b08-ccd1-4e52-a65c-6f6dad6d031d" />
-
-#### Request Fields
-| 파라미터명 | 타입 | 필수 여부 | 설명             |
-|------------|------|-----------|------------------|
-| scheduleId | Long | Required  | 삭제할 일정의 ID |
+- 프로젝트의 HTTP API 설계를 확인하려면 아래 링크를 참조해주세요.
+- https://polarized-fireman-344.notion.site/2b1c7a901fb58013a476f2b382fbefcd?v=2b1c7a901fb581489950000c857a3fee&pvs=74
 ## 📊 ERD
-<img width="746" height="180" alt="image" src="https://github.com/user-attachments/assets/9a3113f4-3ace-471a-84c6-9ae38a56d6cd" />
+![img_1.png](img_1.png)
+
+#### 주요 테이블 관계:
+- User 1 : N Schedule (사용자 - 일정)
+- Schedule 1 : N Comment (일정 - 댓글)
+- User 1 : N Comment (사용자 - 댓글)
 
 ## 📁 프로젝트 구조
 ```
 src
-├── main
-│   ├── java
-│   │   └── com.example.scheduleproject
-│   │       ├── ScheduleProjectApplication.java
-│   │       ├── comment                 # 💬 댓글 도메인
-│   │       │   ├── controller          # 댓글 관련 API
-│   │       │   ├── dto                 # 요청/응답 DTO
-│   │       │   ├── entity              # 댓글 엔티티
-│   │       │   ├── repository          # 댓글 Repository
-│   │       │   └── service             # 댓글 비즈니스 로직
-│   │       ├── schedule                # 🗓 일정 도메인
-│   │       │   ├── controller          # 일정 관련 API
-│   │       │   ├── dto                 # 요청/응답 DTO
-│   │       │   ├── entity              # 일정 엔티티
-│   │       │   ├── repository          # 일정 Repository
-│   │       │   └── service             # 일정 비즈니스 로직
-│   │       ├── common
-│   │       │   └── entity              # BaseEntity 등 공통 엔티티
-│   │       └── exception               # ⚠️ 전역 예외 처리
-│   │           ├── ErrorResponse.java
-│   │           └── GlobalExceptionHandler.java
-│   └── resources
-│       ├── application.properties      # 설정 파일
-│       ├── static                      # 정적 리소스
-└──     └── templates                   # 템플릿 파일 (선택)
+└── main
+    ├── java
+    │   └── com
+    │       └── example
+    │           └── scheduleproject
+    │               ├── ScheduleProjectApplication.java
+    │               ├── comment
+    │               │   ├── controller
+    │               │   │   └── CommentController.java
+    │               │   ├── dto
+    │               │   │   ├── req
+    │               │   │   │   ├── CreateCommentRequest.java
+    │               │   │   │   └── UpdateCommentRequest.java
+    │               │   │   └── res
+    │               │   │       ├── CreateCommentResponse.java
+    │               │   │       ├── GetCommentResponse.java
+    │               │   │       └── UpdateCommentResponse.java
+    │               │   ├── entity
+    │               │   │   └── Comment.java
+    │               │   ├── repository
+    │               │   │   └── CommentRepository.java
+    │               │   └── service
+    │               │       └── CommentService.java
+    │               ├── common
+    │               │   ├── config
+    │               │   │   └── SecurityConfig.java
+    │               │   ├── entity
+    │               │   │   └── BaseEntity.java
+    │               │   └── exception
+    │               │       ├── CustomException.java
+    │               │       ├── ErrorResponse.java
+    │               │       ├── ExceptionMessage.java
+    │               │       └── GlobalExceptionHandler.java
+    │               ├── schedule
+    │               │   ├── controller
+    │               │   │   └── ScheduleController.java
+    │               │   ├── dto
+    │               │   │   ├── req
+    │               │   │   │   ├── CreateScheduleRequest.java
+    │               │   │   │   ├── DeleteScheduleRequest.java
+    │               │   │   │   └── UpdateScheduleRequest.java
+    │               │   │   └── res
+    │               │   │       ├── CreateScheduleResponse.java
+    │               │   │       ├── GetScheduleDetailResponse.java
+    │               │   │       ├── GetScheduleResponse.java
+    │               │   │       ├── SchedulePageResponse.java
+    │               │   │       └── UpdateScheduleResponse.java
+    │               │   ├── entity
+    │               │   │   └── Schedule.java
+    │               │   ├── repository
+    │               │   │   └── ScheduleRepository.java
+    │               │   └── service
+    │               │       └── ScheduleService.java
+    │               └── user
+    │                   ├── controller
+    │                   │   └── UserController.java
+    │                   ├── dto
+    │                   │   ├── req
+    │                   │   │   ├── CreateUserRequest.java
+    │                   │   │   ├── DeleteUserRequest.java
+    │                   │   │   └── LoginRequest.java
+    │                   │   └── res
+    │                   │       ├── GetUserResponse.java
+    │                   │       └── LoginResponse.java
+    │                   ├── entity
+    │                   │   └── User.java
+    │                   ├── repository
+    │                   │   └── UserRepository.java
+    │                   └── service
+    │                       └── UserService.java
+    └── resources
+        └── application.properties
+
 ```
 ## 💡 주요 구현 사항
 ### 1. 3 Layer Architecture
 - Controller: HTTP 요청/응답 처리, 입력 검증
 - Service: 비즈니스 로직, 트랜잭션 관리
-- Repository: 데이터베이스 접근
+- Repository: 데이터베이스 접근, JPQL 쿼리
 각 계층이 명확한 책임을 가지고 있어 유지보수성과 확장성이 높습니다.
-### 2. N+1 문제 해결
-일정 조회 시 댓글을 함께 조회할 때 발생하는 N+1 문제를 Fetch Join으로 해결했습니다.
+### 2. 비밀번호 암호화 (BCrypt)
 ```Java
-@Query("SELECT s FROM Schedule s " +
-            "LEFT JOIN FETCH s.comments " +
-            "WHERE s.scheduleId = :scheduleId")
-    Optional<Schedule> findByIdWithComments(@Param("scheduleId") Long scheduleId);
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+
+// 사용
+String encodedPassword = passwordEncoder.encode(request.getPassword());
 ```
-### 3. 입력값 검증
+회원가입 시 비밀번호를 BCrypt로 암호화하여 데이터베이스에 저장하며, 로그인/삭제 시 입력받은 비밀번호와 비교합니다.
+### 3. 세션 기반 인증
+```Java
+@Transactional(readOnly = true)
+public LoginResponse login(@Valid LoginRequest request, HttpSession session) {
+    User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new CustomException(ExceptionMessage.INVALID_LOGIN));
+
+    verifyPassword(request.getPassword(), user.getPassword());
+
+    // 세션 저장
+    session.setAttribute("userId", user.getUserId());
+    session.setAttribute("email", user.getEmail());
+
+    return new LoginResponse(user.getUserId(), user.getUsername(), user.getEmail());
+}
+```
+로그인 성공 시 userId와 email을 세션에 저장합니다. 이후 API 요청 시 userId를 Query Parameter로 전달받아 권한을 검증합니다.
+### 4. 권한 검증 (userId 기반)
+```Java
+// 수정 시 권한 검증
+if (!schedule.getUser().getUserId().equals(userId)) {
+        throw new CustomException(ExceptionMessage.SCHEDULE_NO_PERMISSION);
+}
+
+// 댓글 삭제 시 권한 검증
+        if (!comment.getUser().getUserId().equals(userId)) {
+        throw new CustomException(ExceptionMessage.COMMENT_NO_PERMISSION);
+}
+```
+모든 수정/삭제 작업 시 요청한 사용자가 해당 리소스의 소유자인지 검증합니다.
+### 5. 입력값 검증
 Spring Validation을 사용한 선언적 검증을 구현했습니다.
 ```Java
 @NotBlank(message = "일정 제목은 필수입니다.")
 @Size(max = 30, message = "일정 제목은 최대 30자까지 입력 가능합니다.")
 private String title;
 ```
-- 일정 제목: 최대 30자, 필수
-- 일정 내용: 최대 200자, 필수
-- 댓글 내용: 최대 100자, 필수
-- 작성자명, 비밀번호: 필수
-### 4. 전역 예외 처리
-@RestControllerAdvice를 사용하여 일관된 에러 응답을 제공합니다.
+검증 규칙:
+- 일정 제목: 최대 30자, 필수, 공백 불가
+- 일정 내용: 최대 200자, 필수, 공백 불가
+- 댓글 내용: 최대 100자, 필수, 공백 불가
+- 사용자명, 이메일, 비밀번호: 필수, 공백 불가
+- 이메일: 중복 불가, 유효한 이메일 형식
+### 6. 전역 예외 처리
 ```Java
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -273,40 +187,41 @@ public class GlobalExceptionHandler {
         // 400 Bad Request
     }
     
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(...) {
-        // 401 Unauthorized (비밀번호 불일치)
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(...) {
+        // 상황에 따라 401, 403, 404, 409 등
     }
 }
 ```
-### 5. JPA Auditing
-생성일/수정일을 자동으로 관리합니다.
+일관된 에러 응답 포맷으로 모든 예외를 처리합니다.
+### 6. 페이지네이션
 ```Java
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public class BaseEntity {
-    @CreatedDate
-    private LocalDateTime createdDate;
+@Transactional(readOnly = true)
+public Page<SchedulePageResponse> getScheduleWithPagination(int page, int size) {
+    if (page < 0) page = 0;
+    if (size <= 0) size = 10;
     
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
+    Pageable pageable = PageRequest.of(page, size);
+    return scheduleRepository.findAllWithCommentCountPaging(pageable);
 }
 ```
-### 6. RESTful API 설계
-- 리소스 중심 URL 설계
+일정 목록을 페이지네이션으로 조회하며, 각 일정의 댓글 개수도 함께 반환합니다.
+### 7. RESTful API 설계
+- 리소스 중심 URL 설계 (/users, /schedules, /comments)
 - 적절한 HTTP 메서드 사용 (GET, POST, PATCH, DELETE)
 - 명확한 HTTP 상태 코드 반환
-- @RequestParam, @PathVariable, @RequestBody 적절한 활용
+- Query Parameter 활용 (페이지네이션, 필터링, 권한 검증)
 ## 📌 개발 중 해결한 문제
-### 1. N+1 문제
-문제: 일정 조회 시 댓글을 가져오기 위해 추가 쿼리가 실행되는 문제
-해결: Fetch Join을 사용하여 한 번의 쿼리로 일정과 댓글을 함께 조회
-### 2. 필드명 불일치
-문제: Entity 필드명이 스네이크 케이스로 되어 있어 JPA 쿼리 메서드가 작동하지 않음
-해결: 필드명을 카멜 케이스로 변경하고 @Column으로 DB 컬럼명 매핑
-### 3. LAZY 로딩과 트랜잭션
-문제: 트랜잭션 범위 밖에서 지연 로딩 시도로 LazyInitializationException 발생
-해결: @Transactional(readOnly = true)를 Service 메서드에 적용
-***
-개발 기간: 2024.11.04 - 2024.11.05
-개발자: 성주연
+### 1. 단건 조회 시 댓글 별도 쿼리로 조회
+- 구현: 일정 단건 조회 시 댓글을 별도의 쿼리로 조회하여 관리
+페이지네이션을 사용하는 프로젝트 특성상 Fetch Join을 사용하지 않고, 단건 조회(findScheduleDetail)와 댓글 조회(findCommentsByScheduleIdAsDto)를 분리하여 구현했습니다.
+- 이렇게 분리함으로써 필요한 경우에만 댓글을 조회하고, 페이지네이션 시에는 댓글 정보를 포함하지 않아 효율적입니다.
+### 2. 권한 검증 로직
+문제: 매번 수정/삭제 API에서 비밀번호 검증 로직을 중복으로 작성
+해결: Query Parameter userId를 활용하여 세션 기반 권한 검증으로 통일
+```Java
+if (!schedule.getUser().getUserId().equals(userId)) {
+    throw new CustomException(ExceptionMessage.SCHEDULE_NO_PERMISSION);
+}
+```
+
